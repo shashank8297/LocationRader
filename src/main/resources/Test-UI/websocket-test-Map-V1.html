@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Location Radar with Map</title>
+
+  <!-- Load Leaflet CSS without integrity -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+  />
+  
+  <!-- Load SockJS and classic STOMP -->
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  
+  <!-- Load Leaflet JS without integrity -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+  ></script>
+
+  <style>
+    /* Reset and body styles from your original */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #4e54c8, #8f94fb);
+      margin: 0;
+      padding: 0;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px 40px;
+      border-radius: 15px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-weight: 700;
+      margin-bottom: 15px;
+      letter-spacing: 1.2px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.3);
+    }
+
+    p.description {
+      text-align: center;
+      font-size: 1rem;
+      margin-bottom: 0;
+      color: #dcdcffcc;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 0;
+    }
+
+    input[type="text"] {
+      flex-grow: 1;
+      padding: 14px 18px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      transition: box-shadow 0.3s ease;
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
+      box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.2);
+    }
+
+    input[type="text"]::placeholder {
+      color: #eee;
+      opacity: 0.7;
+    }
+
+    input[type="text"]:focus {
+      box-shadow: 0 0 8px #b5b7ff;
+      background: rgba(255, 255, 255, 0.4);
+      color: #000;
+      font-weight: 600;
+    }
+
+    button {
+      padding: 14px 25px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #4e54c8;
+      background: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      box-shadow: 0 4px 10px rgba(255, 255, 255, 0.3);
+      user-select: none;
+    }
+
+    button:hover {
+      background-color: #3b40b3;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(59, 64, 179, 0.6);
+    }
+
+    #location-info {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 20px 25px;
+      border-radius: 12px;
+      box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.1);
+      min-height: 80px;
+      transition: background-color 0.5s ease;
+      font-size: 1.1rem;
+      text-align: center;
+      letter-spacing: 0.05em;
+      user-select: text;
+    }
+
+    /* Flash animation on update */
+    #location-info.updated {
+      animation: flashUpdate 1.2s ease forwards;
+    }
+
+    @keyframes flashUpdate {
+      0% {
+        background-color: rgba(255, 255, 255, 0.4);
+        color: #222;
+        font-weight: 700;
+      }
+      100% {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        font-weight: 500;
+      }
+    }
+
+    /* Map container */
+    #map {
+      width: 100%;
+      height: 320px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      user-select: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 520px) {
+      .container {
+        padding: 20px 25px;
+      }
+
+      button {
+        padding: 12px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Location Radar</h1>
+    <p class="description">Enter the User ID below to subscribe for real-time location updates.</p>
+
+    <div class="input-group">
+      <input type="text" id="userIdInput" placeholder="Enter User ID" autocomplete="off" />
+      <button onclick="subscribeToLocationUpdates()">Subscribe</button>
+    </div>
+
+    <div id="location-info">
+      <h3>Location Updates:</h3>
+      <p id="location-status">No updates yet...</p>
+    </div>
+
+    <div id="map"></div>
+  </div>
+
+  <script>
+    let stompClient = null;
+    let userId = null;
+    let subscription = null;
+
+    // Leaflet map and marker variables
+    let map = null;
+    let marker = null;
+
+    function initMap() {
+      // Initialize the map centered roughly on India for example
+      map = L.map('map').setView([20.5937, 78.9629], 5);
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+    }
+
+    function connectWebSocket() {
+      const socket = new SockJS('http://localhost:9090/ws');
+      stompClient = Stomp.over(socket);
+      stompClient.debug = null;
+
+      stompClient.connect({}, function(frame) {
+        console.log('Connected: ' + frame);
+
+        const topic = '/topic/coordinates/' + userId;
+		console.log("---topic---", topic);
+
+        if (subscription) {
+          subscription.unsubscribe();
+        }
+
+        subscription = stompClient.subscribe(topic, function(message) {
+          const locationUpdate = JSON.parse(message.body);
+          console.log('Location Update:', locationUpdate);
+		  console.log("---topic---", topic);
+          updateLocationInfo(locationUpdate);
+          updateMap(locationUpdate.latitude, locationUpdate.longitude);
+        });
+      }, function(error) {
+        console.error('STOMP connection error:', error);
+        alert('Could not connect to WebSocket server. See console for details.');
+      });
+    }
+
+    function updateLocationInfo(locationUpdate) {
+      const locationStatus = document.getElementById('location-status');
+      const locationInfo = document.getElementById('location-info');
+
+      locationStatus.innerHTML = `User ID: <strong>${locationUpdate.userId}</strong> | Latitude: <strong>${locationUpdate.latitude}</strong> | Longitude: <strong>${locationUpdate.longitude}</strong>`;
+
+      // Add flash animation on update
+      locationInfo.classList.add('updated');
+      setTimeout(() => {
+        locationInfo.classList.remove('updated');
+      }, 1200);
+    }
+
+    function updateMap(lat, lng) {
+      if (!map) return;
+
+      const latNum = parseFloat(lat);
+      const lngNum = parseFloat(lng);
+
+      if (isNaN(latNum) || isNaN(lngNum)) {
+        console.warn('Invalid latitude or longitude:', lat, lng);
+        return;
+      }
+
+      if (!marker) {
+        // First time: add marker and set view
+        marker = L.marker([latNum, lngNum]).addTo(map);
+        marker.bindPopup(`Latitude: ${latNum}<br>Longitude: ${lngNum}`).openPopup();
+        map.setView([latNum, lngNum], 13);
+      } else {
+        // Move marker and update popup
+        marker.setLatLng([latNum, lngNum]);
+        marker.getPopup().setContent(`Latitude: ${latNum}<br>Longitude: ${lngNum}`).openOn(map);
+        map.panTo([latNum, lngNum]);
+      }
+    }
+
+    function subscribeToLocationUpdates() {
+      userId = document.getElementById('userIdInput').value.trim();
+
+      if (userId) {
+        if (!stompClient || !stompClient.connected) {
+          connectWebSocket();
+        } else {
+          const topic = '/topic/coordinates/' + userId;
+
+          if (subscription) {
+            subscription.unsubscribe();
+          }
+
+          subscription = stompClient.subscribe(topic, function(message) {
+            const locationUpdate = JSON.parse(message.body);
+            console.log('Location Update:', locationUpdate);
+            updateLocationInfo(locationUpdate);
+            updateMap(locationUpdate.latitude, locationUpdate.longitude);
+          });
+        }
+      } else {
+        alert('Please enter a valid User ID.');
+      }
+    }
+
+    // Initialize the map on page load
+    window.onload = initMap;
+  </script>
+
+</body>
+</html>

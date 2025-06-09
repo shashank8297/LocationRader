@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #location {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Tracking Your Location...</h1>
+
+    <div id="location">
+        <p><strong>Latitude:</strong> <span id="latitude">Loading...</span></p>
+        <p><strong>Longitude:</strong> <span id="longitude">Loading...</span></p>
+    </div>
+
+    <script>
+        let lastSentLocation = { latitude: null, longitude: null };
+
+        // Check if Geolocation is supported by the browser
+        if ("geolocation" in navigator) {
+            // Watch the position to get real-time updates
+            navigator.geolocation.watchPosition(function(position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                // Update the displayed coordinates in the HTML
+                document.getElementById('latitude').innerText = latitude;
+                document.getElementById('longitude').innerText = longitude;
+
+                // Only send update if the location has changed significantly
+                if (Math.abs(latitude - lastSentLocation.latitude) > 0.0001 || Math.abs(longitude - lastSentLocation.longitude) > 0.0001) {
+                    lastSentLocation = { latitude, longitude };
+
+                    // Send the updated location to the Spring Boot backend
+                    fetch("http://localhost:8080/location", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            latitude: latitude,
+                            longitude: longitude
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log("Location update sent:", data);
+                    })
+                    .catch(err => {
+                        console.error("Error sending location:", err);
+                    });
+                }
+            }, function(error) {
+                console.error("Error getting location:", error);
+                alert("Unable to get your location. Please enable location services.");
+            }, {
+                enableHighAccuracy: true,
+                maximumAge: 10000, // Get updated location every 10 seconds
+                timeout: 5000 // Timeout after 5 seconds if location cannot be determined
+            });
+        } else {
+            alert("Geolocation is not supported by your browser.");
+        }
+    </script>
+
+</body>
+</html>
