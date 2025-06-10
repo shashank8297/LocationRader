@@ -25,6 +25,8 @@ public class User {
 
 	private String webSocketSessionId;
 
+	private String password;
+
 	public Long getUserId() {
 		return userId;
 	}
@@ -81,4 +83,12 @@ public class User {
 		this.webSocketSessionId = webSocketSessionId;
 	}
 
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
 }

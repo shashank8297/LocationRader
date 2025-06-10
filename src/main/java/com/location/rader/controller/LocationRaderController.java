@@ -43,6 +43,15 @@ public class LocationRaderController {
 				+ objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(createdUser));
 	}
 
+	@PostMapping("/login")
+	public  ResponseEntity<?> userLogin(@RequestBody User user){
+		Boolean validate = userService.validatingCredentials(user);
+		if(validate){
+			return ResponseEntity.ok("Login successful for userId: " + user.getUserId());
+		}
+		return ResponseEntity.status(401).body("Invalid credentials. Please check userId or password.");
+	}
+
 	@PostMapping("/location")
 	public ResponseEntity<String> location(@RequestBody Coordinates coordinates) {
 		System.out.println("Get mapping location");
@@ -86,4 +95,5 @@ public class LocationRaderController {
 		}
 		return ResponseEntity.ok(listOfUserIds);
 	}
+
 }

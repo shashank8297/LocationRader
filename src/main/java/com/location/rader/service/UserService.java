@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.location.rader.model.User;
@@ -15,6 +16,9 @@ public class UserService {
 
 	@Autowired
 	private UserRepositoty userRepositoty;
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
 	public User createNewUser(User user) {
 
@@ -28,8 +32,21 @@ public class UserService {
 			newUser.setFullName(user.getFullName());
 			newUser.seteMailAddress(user.geteMailAddress());
 			newUser.setMobileNumber(user.getMobileNumber());
+			newUser.setPassword(passwordEncoder.encode(user.getPassword()));
 
 			return userRepositoty.save(newUser);
+		}
+	}
+
+	public Boolean validatingCredentials(User user){
+		Optional<User> userDetails = userRepositoty.findById(user.getUserId());
+		if(userDetails.isPresent()){
+			String storedPassword = userDetails.get().getPassword();
+			String loginPassword = user.getPassword();
+			return passwordEncoder.matches(loginPassword, storedPassword);
+		}
+		else {
+			return false;
 		}
 	}
 
