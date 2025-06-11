@@ -31,7 +31,7 @@ public class KafkaLocationsSentToUI {
 
 			Optional<User> sendingUser = userRepositoty.findById(sendingUserId);
 			if (sendingUser.isPresent()) {
-				List<Long> reciversUserIds = sendingUser.get().getUsersLocationGetsAccess();
+				List<Long> reciversUserIds = sendingUser.get().getSharedUsers();
 				for (Long reciversUserId : reciversUserIds) {
 					String destination = "/topic/coordinates/" + reciversUserId;
 					messagingTemplate.convertAndSend(destination, message);

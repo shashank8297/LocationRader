@@ -2,6 +2,9 @@ package com.location.rader.controller;
 
 import java.util.List;
 
+import com.location.rader.model.Notification;
+import com.location.rader.service.NotificationService;
+import com.location.rader.utils.EndpointsConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -29,11 +32,14 @@ public class LocationRaderController {
 	private UserService userService;
 
 	@Autowired
+	private NotificationService notificationService;
+
+	@Autowired
 	private ObjectMapper objectMapper;
 
 	public ResponseEntity<String> responseEntity;
 
-	@PostMapping("/register")
+	@PostMapping(EndpointsConstants.NEW_USER_REGISTER_ENDPOINT)
 	public ResponseEntity<String> registerNewUser(@RequestBody User user) throws JsonProcessingException {
 		User createdUser = userService.createNewUser(user);
 		if (createdUser == null) {
@@ -43,7 +49,7 @@ public class LocationRaderController {
 				+ objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(createdUser));
 	}
 
-	@PostMapping("/login")
+	@PostMapping(EndpointsConstants.LOGIN_ENDPOINT)
 	public  ResponseEntity<?> userLogin(@RequestBody User user){
 		Boolean validate = userService.validatingCredentials(user);
 		if(validate){
@@ -52,7 +58,7 @@ public class LocationRaderController {
 		return ResponseEntity.status(401).body("Invalid credentials. Please check userId or password.");
 	}
 
-	@PostMapping("/location")
+	@PostMapping(EndpointsConstants.LOCATION_UPDATE_ENDPOINT)
 	public ResponseEntity<String> location(@RequestBody Coordinates coordinates) {
 		System.out.println("Get mapping location");
 		System.out.println("Latitude: " + coordinates.getLatitude());
@@ -61,7 +67,7 @@ public class LocationRaderController {
 		return ResponseEntity.ok("Location saved to history.");
 	}
 
-	@GetMapping("/history")
+	@GetMapping(EndpointsConstants.USER_HISTORY_ENDPOINT)
 	public ResponseEntity<?> history(@RequestParam("userId") Long userId) {
 		List<Coordinates> coordinatesHistory = locationRaderService.getLocationHistory(userId);
 		if (coordinatesHistory == null) {
@@ -70,16 +76,16 @@ public class LocationRaderController {
 		return ResponseEntity.ok(coordinatesHistory);
 	}
 
-	@PostMapping("/locationAccess")
+	@PostMapping(EndpointsConstants.REQUEST_FOR_LOCATION_ACCESS_ENDPOINT)
 	public ResponseEntity<String> accessLocationOfOtherUsers(@RequestBody User user) throws JsonProcessingException {
-		User listOfUserCanAccessOtherUsers = userService.saveWhichUserCanAccesOtherLocations(user);
+		User listOfUserCanAccessOtherUsers = userService.saveWhichUserCanAccesOtherUsersLocations(user);
 		return ResponseEntity.ok("Access Granted for User: " + user.getUserId() + "following users "
 				+ objectMapper.writerWithDefaultPrettyPrinter()
-						.writeValueAsString(listOfUserCanAccessOtherUsers.getUsersLocationsCanAccess()));
+						.writeValueAsString(listOfUserCanAccessOtherUsers.getAccessibleUsers()));
 	}
 
-	@GetMapping("/CoordinatedOfOtherUser")
-	public ResponseEntity<String> getCoordinatedOfOtherUser(@RequestParam("userId") Long userId) {
+	@GetMapping(EndpointsConstants.COORDINATES_OF_OTHER_USER_ENDPOINT)
+	public ResponseEntity<String> getCoordinatesOfOtherUser(@RequestParam("userId") Long userId) {
 
 		locationRaderService.sendCoordinatesToUser(userId);
 
@@ -87,7 +93,7 @@ public class LocationRaderController {
 
 	}
 
-	@GetMapping("/userHaveAccessTo")
+	@GetMapping(EndpointsConstants.USER_HAVE_ACCESS_TO_ENDPOINT)
 	public ResponseEntity<?> userHaveAccessTo(@RequestParam("userId") Long userId){
 		List<Long> listOfUserIds =  locationRaderService.listOfUserHaveAccess(userId);
 		if (listOfUserIds == null) {
@@ -96,4 +102,23 @@ public class LocationRaderController {
 		return ResponseEntity.ok(listOfUserIds);
 	}
 
+	@PostMapping(EndpointsConstants.NEW_NOTIFICATION_ENDPOINT)
+	public ResponseEntity<?> newtNotification(@RequestBody Notification notification){
+		Notification createdNotification = notificationService.savingNotificationRequestes(notification);
+		if(createdNotification != null){
+			return ResponseEntity.ok(createdNotification);
+		}else {
+			return ResponseEntity.status(500).body("Failed to create notification.");
+		}
+	}
+
+	@GetMapping(EndpointsConstants.GET_PENDING_NOTIFICATIONS_ENDPOINT)
+	public ResponseEntity<?> listOfPendingNotification(@RequestParam("userId") Long userId){
+		List<Notification> listOfNotifications = notificationService.pendingNotifications(userId);
+		if (listOfNotifications != null && !listOfNotifications.isEmpty()) {
+			return ResponseEntity.ok(listOfNotifications);
+		} else {
+			return ResponseEntity.status(204).body("No pending notifications found for userId: " + userId);
+		}
+	}
 }

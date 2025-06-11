@@ -19,9 +19,9 @@ public class User {
 
 	private String mobileNumber;
 
-	private List<Long> usersLocationsCanAccess;
+	private List<Long> accessibleUsers;
 
-	private List<Long> usersLocationGetsAccess;
+	private List<Long> sharedUsers;
 
 	private String webSocketSessionId;
 
@@ -59,20 +59,20 @@ public class User {
 		this.mobileNumber = mobileNumber;
 	}
 
-	public List<Long> getUsersLocationsCanAccess() {
-		return usersLocationsCanAccess;
+	public List<Long> getAccessibleUsers() {
+		return accessibleUsers;
 	}
 
-	public void setUsersLocationsCanAccess(List<Long> usersLocationsCanAccess) {
-		this.usersLocationsCanAccess = usersLocationsCanAccess;
+	public void setAccessibleUsers(List<Long> accessibleUsers) {
+		this.accessibleUsers = accessibleUsers;
 	}
 
-	public List<Long> getUsersLocationGetsAccess() {
-		return usersLocationGetsAccess;
+	public List<Long> getSharedUsers() {
+		return sharedUsers;
 	}
 
-	public void setUsersLocationGetsAccess(List<Long> usersLocationGetsAccess) {
-		this.usersLocationGetsAccess = usersLocationGetsAccess;
+	public void setSharedUsers(List<Long> sharedUsers) {
+		this.sharedUsers = sharedUsers;
 	}
 
 	public String getWebSocketSessionId() {

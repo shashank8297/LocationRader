@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.location.rader.model.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -64,7 +65,7 @@ public class LocationRaderService {
 
 	public void sendCoordinatesToUser(Long userId) {
 		Optional<User> isExist = userRepositoty.findById(userId);
-		List<Long> canAccess = isExist.get().getUsersLocationsCanAccess();
+		List<Long> canAccess = isExist.get().getAccessibleUsers();
 		
 		//kafkaLocationsSentToUI.consumeLocationUpdate(canAccess);
 	}
@@ -72,7 +73,7 @@ public class LocationRaderService {
 	public List<Long> listOfUserHaveAccess(Long userId){
 		Optional<User> listOfUsers = userRepositoty.findById(userId);
 		if(listOfUsers.isPresent()){
-			List<Long> userIds = listOfUsers.get().getUsersLocationGetsAccess();
+			List<Long> userIds = listOfUsers.get().getSharedUsers();
 			return userIds;
 		}
 		return Collections.emptyList();

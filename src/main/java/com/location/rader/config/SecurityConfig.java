@@ -1,5 +1,6 @@
 package com.location.rader.config;
 
+import com.location.rader.utils.EndpointsConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -15,7 +16,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/register","/login").permitAll() // allow public registration
+                        .requestMatchers(
+                                "/register","/login","/userHaveAccessTo/**","/ws/**","/requestForLocationAccess"
+                        ,EndpointsConstants.NEW_NOTIFICATION_ENDPOINT
+                        ,EndpointsConstants.GET_PENDING_NOTIFICATIONS_ENDPOINT)
+                        .permitAll() // allow public registration
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.disable()) // ✅ This is the new correct way in 6.1+

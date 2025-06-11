@@ -33,6 +33,8 @@ public class UserService {
 			newUser.seteMailAddress(user.geteMailAddress());
 			newUser.setMobileNumber(user.getMobileNumber());
 			newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+			newUser.setAccessibleUsers(new ArrayList<>());
+			newUser.setSharedUsers(new ArrayList<>());
 
 			return userRepositoty.save(newUser);
 		}
@@ -50,27 +52,27 @@ public class UserService {
 		}
 	}
 
-	public User saveWhichUserCanAccesOtherLocations(User user) {
+	public User saveWhichUserCanAccesOtherUsersLocations(User user) {
 		Optional<User> userDeatails = userRepositoty.findById(user.getUserId());
 
 		List<Long> accessList = new ArrayList<>();
-		for (int i = 0; i < user.getUsersLocationsCanAccess().size(); i++) {
-			accessList.add(user.getUsersLocationsCanAccess().get(i));
+		for (int i = 0; i < user.getAccessibleUsers().size(); i++) {
+			accessList.add(user.getAccessibleUsers().get(i));
 		}
-		userDeatails.get().setUsersLocationsCanAccess(accessList);
+		userDeatails.get().setAccessibleUsers(accessList);
 		User saved = userRepositoty.save(userDeatails.get());
 
-		for (int j = 0; j < saved.getUsersLocationsCanAccess().size(); j++) {
-			Optional<User> userDetailsOfAccessList = userRepositoty.findById(saved.getUsersLocationsCanAccess().get(j));
+		for (int j = 0; j < saved.getAccessibleUsers().size(); j++) {
+			Optional<User> userDetailsOfAccessList = userRepositoty.findById(saved.getAccessibleUsers().get(j));
 			if (userDetailsOfAccessList.isPresent()) {
-				List<Long> getsAccessList = userDetailsOfAccessList.get().getUsersLocationGetsAccess();
+				List<Long> getsAccessList = userDetailsOfAccessList.get().getSharedUsers();
 				if (getsAccessList == null) {
 					getsAccessList = new ArrayList<>();
 				}
 				// Avoid duplicates
 				if (!getsAccessList.contains(saved.getUserId())) {
 					getsAccessList.add(saved.getUserId());
-					userDetailsOfAccessList.get().setUsersLocationGetsAccess(getsAccessList);
+					userDetailsOfAccessList.get().setSharedUsers(getsAccessList);
 					userRepositoty.save(userDetailsOfAccessList.get());
 				}
 			}
