@@ -24,17 +24,23 @@ public class NotificationService {
     private UserRepositoty userRepositoty;
 
     public Notification savingNotificationRequestes(Notification notification){
-        Notification newNotification = new Notification();
-        newNotification.setRequestId(UUID.randomUUID());
-        newNotification.setCurrentUserId(notification.getCurrentUserId());
-        newNotification.setTargetUserId(notification.getTargetUserId());
-        newNotification.setStatus(NotificationRequestStatus.PENDING);
+        Optional<Notification> checkForDublicateNotification = notificationRepository.findByCurrentUserIdAndTargetUserIdAndStatus(
+                notification.getCurrentUserId(), notification.getTargetUserId(), NotificationRequestStatus.PENDING);
+        if(!checkForDublicateNotification.isPresent()){
+            Notification newNotification = new Notification();
+            newNotification.setRequestId(UUID.randomUUID());
+            newNotification.setCurrentUserId(notification.getCurrentUserId());
+            newNotification.setTargetUserId(notification.getTargetUserId());
+            newNotification.setStatus(NotificationRequestStatus.PENDING);
 
-        return notificationRepository.save(newNotification);
+            return notificationRepository.save(newNotification);
+        }else {
+            return null;
+        }
     }
 
     public List<Notification> pendingNotifications(Long userId){
-         List<Notification> pendingList =  notificationRepository.findByCurrentUserIdAndStatus(userId, NotificationRequestStatus.PENDING);
+         List<Notification> pendingList =  notificationRepository.findByTargetUserIdAndStatus(userId, NotificationRequestStatus.PENDING);
          return pendingList;
     }
 
@@ -76,6 +82,35 @@ public class NotificationService {
         }else {
             throw new EntityNotFoundException("Notification not found with ID: " + requestID);
         }
+    }
+
+    public void rejectNotifications(UUID requestID){
+        Optional<Notification> notification = notificationRepository.findById(requestID);
+        if(notification.isPresent()){
+            Notification requestedNotificationForReject = notification.get();
+            requestedNotificationForReject.setStatus(NotificationRequestStatus.REJECTED);
+            notificationRepository.save(requestedNotificationForReject);
+        }else {
+            throw new EntityNotFoundException("Notification not found with ID: " + requestID);
+        }
+    }
+
+    public List<Notification> acceptHistory(Long currentUserId) {
+        Optional<List<Notification>> optionalAcceptHistory = notificationRepository.findAllByCurrentUserIdAndStatus(currentUserId, NotificationRequestStatus.ACCEPTED);
+        if(optionalAcceptHistory.isPresent()){
+            List<Notification> acceptHistory = optionalAcceptHistory.get();
+            return acceptHistory;
+        }
+        return new ArrayList<>();
+    }
+
+    public List<Notification> rejectHistory(Long currentUserId) {
+        Optional<List<Notification>> optionalRejectHistory = notificationRepository.findAllByCurrentUserIdAndStatus(currentUserId, NotificationRequestStatus.REJECTED);
+        if(optionalRejectHistory.isPresent()){
+            List<Notification> rejectHistory = optionalRejectHistory.get();
+            return rejectHistory;
+        }
+        return new ArrayList<>();
     }
 }
 

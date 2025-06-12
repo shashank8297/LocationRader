@@ -1,6 +1,7 @@
 package com.location.rader.service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -73,9 +74,11 @@ public class LocationRaderService {
 	public List<Long> listOfUserHaveAccess(Long userId){
 		Optional<User> listOfUsers = userRepositoty.findById(userId);
 		if(listOfUsers.isPresent()){
-			List<Long> userIds = listOfUsers.get().getSharedUsers();
+			List<Long> userIds = listOfUsers.get().getAccessibleUsers();
 			return userIds;
 		}
 		return Collections.emptyList();
 	}
+
+
 }

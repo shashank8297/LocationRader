@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,15 @@ public class UserService {
 			newUser.setSharedUsers(new ArrayList<>());
 
 			return userRepositoty.save(newUser);
+		}
+	}
+
+	public User userDetails(Long userId){
+		Optional<User> userDetails = userRepositoty.findById(userId);
+		if(userDetails.isPresent()){
+            return userDetails.get();
+		}else{
+			throw new EntityNotFoundException("User not found with ID: " + userId);
 		}
 	}
 
@@ -78,5 +88,13 @@ public class UserService {
 			}
 		}
 		return saved;
+	}
+
+	public List<User> usersList(){
+		List<User> users = userRepositoty.findAll();
+		if(!users.isEmpty()){
+			return users;
+		}
+		return new ArrayList<>();
 	}
 }

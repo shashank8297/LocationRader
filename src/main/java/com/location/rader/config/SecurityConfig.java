@@ -17,10 +17,15 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/register","/login","/userHaveAccessTo/**","/ws/**","/requestForLocationAccess"
+                                "/register","/login","/userHaveAccessTo/**","/ws/**","/requestForLocationAccess","/location"
                         ,EndpointsConstants.NEW_NOTIFICATION_ENDPOINT
                         ,EndpointsConstants.GET_PENDING_NOTIFICATIONS_ENDPOINT
-                        ,EndpointsConstants.ACCEPT_LOCATION_REQUEST_ENDPOINT)
+                        ,EndpointsConstants.ACCEPT_LOCATION_REQUEST_ENDPOINT
+                        ,EndpointsConstants.LIST_OF_ALL_USERS_ENDPOINT
+                        ,EndpointsConstants.USER_DETAILS_ENDPOINT
+                        ,EndpointsConstants.REJECTED_LOCATION_REQUEST_ENDPOINT
+                        ,EndpointsConstants.ACCEPT_HISTORY_ENDPOINT
+                        ,EndpointsConstants.REJECT_HISTORY_ENDPOINT)
                         .permitAll() // allow public registration
                         .anyRequest().authenticated()
                 )

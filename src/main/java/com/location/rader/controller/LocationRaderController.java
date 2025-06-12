@@ -60,6 +60,12 @@ public class LocationRaderController {
 		return ResponseEntity.status(401).body("Invalid credentials. Please check userId or password.");
 	}
 
+	@GetMapping(EndpointsConstants.USER_DETAILS_ENDPOINT)
+	public ResponseEntity<User> userDetails(@RequestParam("userId") Long userId){
+		User user =userService.userDetails(userId);
+		return ResponseEntity.ok(user);
+	}
+
 	@PostMapping(EndpointsConstants.LOCATION_UPDATE_ENDPOINT)
 	public ResponseEntity<String> location(@RequestBody Coordinates coordinates) {
 		System.out.println("Get mapping location");
@@ -107,10 +113,14 @@ public class LocationRaderController {
 	@PostMapping(EndpointsConstants.NEW_NOTIFICATION_ENDPOINT)
 	public ResponseEntity<?> newtNotification(@RequestBody Notification notification){
 		Notification createdNotification = notificationService.savingNotificationRequestes(notification);
-		if(createdNotification != null){
+
+		if (createdNotification != null) {
 			return ResponseEntity.ok(createdNotification);
-		}else {
-			return ResponseEntity.status(500).body("Failed to create notification.");
+		} else {
+			String errorMessage = "A request has already been sent to user ID: "
+					+ notification.getTargetUserId()
+					+ ". Please wait until they respond.";
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMessage);
 		}
 	}
 
@@ -134,5 +144,34 @@ public class LocationRaderController {
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while accepting notification.");
 		}
+	}
+
+	@PostMapping(EndpointsConstants.REJECTED_LOCATION_REQUEST_ENDPOINT)
+	public ResponseEntity<?> rejectTheLocationRequest(@RequestBody Notification notification){
+		try{
+			notificationService.rejectNotifications(notification.getRequestId());
+			return ResponseEntity.ok("Notification rejected successfully.");
+		}catch (EntityNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Notification not found: " + e.getMessage());
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while accepting notification.");
+		}
+	}
+
+	@GetMapping(EndpointsConstants.LIST_OF_ALL_USERS_ENDPOINT)
+	public ResponseEntity<List<User>> listOfAllUsers(){
+		return  ResponseEntity.ok(userService.usersList());
+	}
+
+	@GetMapping(EndpointsConstants.ACCEPT_HISTORY_ENDPOINT)
+	public ResponseEntity<List<Notification>> acceptedRequestHistory(@RequestParam("currentUserId") Long currentUserId){
+		List<Notification> acceptHistory = notificationService.acceptHistory(currentUserId);
+		return ResponseEntity.ok(acceptHistory);
+	}
+
+	@GetMapping(EndpointsConstants.REJECT_HISTORY_ENDPOINT)
+	public ResponseEntity<List<Notification>> rejectRequestHistory(@RequestParam("currentUserId") Long currentUserId){
+		List<Notification> rejectHistory = notificationService.rejectHistory(currentUserId);
+		return ResponseEntity.ok(rejectHistory);
 	}
 }
