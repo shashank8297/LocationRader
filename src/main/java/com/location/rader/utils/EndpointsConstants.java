@@ -19,5 +19,6 @@ public class EndpointsConstants {
 
     public static final String GET_PENDING_NOTIFICATIONS_ENDPOINT = "/getPendingNotifications";
 
+    public static final String ACCEPT_LOCATION_REQUEST_ENDPOINT = "/acceptRequest";
     //public static final String _ENDPOINT =;
 }

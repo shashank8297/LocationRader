@@ -19,7 +19,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/register","/login","/userHaveAccessTo/**","/ws/**","/requestForLocationAccess"
                         ,EndpointsConstants.NEW_NOTIFICATION_ENDPOINT
-                        ,EndpointsConstants.GET_PENDING_NOTIFICATIONS_ENDPOINT)
+                        ,EndpointsConstants.GET_PENDING_NOTIFICATIONS_ENDPOINT
+                        ,EndpointsConstants.ACCEPT_LOCATION_REQUEST_ENDPOINT)
                         .permitAll() // allow public registration
                         .anyRequest().authenticated()
                 )

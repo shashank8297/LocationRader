@@ -7,9 +7,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface NotificationRepository extends JpaRepository<Notification, Long> {
+public interface NotificationRepository extends JpaRepository<Notification, UUID> {
     List<Notification> findByTargetUserIdAndStatus(Long userId, NotificationRequestStatus notificationRequestStatus);
 
     List<Notification> findByCurrentUserIdAndStatus(Long userId, NotificationRequestStatus notificationRequestStatus);

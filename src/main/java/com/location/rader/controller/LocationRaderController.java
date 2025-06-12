@@ -5,7 +5,9 @@ import java.util.List;
 import com.location.rader.model.Notification;
 import com.location.rader.service.NotificationService;
 import com.location.rader.utils.EndpointsConstants;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -119,6 +121,18 @@ public class LocationRaderController {
 			return ResponseEntity.ok(listOfNotifications);
 		} else {
 			return ResponseEntity.status(204).body("No pending notifications found for userId: " + userId);
+		}
+	}
+
+	@PostMapping(EndpointsConstants.ACCEPT_LOCATION_REQUEST_ENDPOINT)
+	public ResponseEntity<?> acceptTheLocationRequest(@RequestBody Notification notification){
+		try {
+			notificationService.accepctNotifications(notification.getRequestId());
+			return ResponseEntity.ok("Notification accepted successfully.");
+		} catch (EntityNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Notification not found: " + e.getMessage());
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while accepting notification.");
 		}
 	}
 }
