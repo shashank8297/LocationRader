@@ -25,7 +25,8 @@ public class SecurityConfig {
                         ,EndpointsConstants.USER_DETAILS_ENDPOINT
                         ,EndpointsConstants.REJECTED_LOCATION_REQUEST_ENDPOINT
                         ,EndpointsConstants.ACCEPT_HISTORY_ENDPOINT
-                        ,EndpointsConstants.REJECT_HISTORY_ENDPOINT)
+                        ,EndpointsConstants.REJECT_HISTORY_ENDPOINT
+                        ,EndpointsConstants.ALL_NOTIFICATIONS)
                         .permitAll() // allow public registration
                         .anyRequest().authenticated()
                 )

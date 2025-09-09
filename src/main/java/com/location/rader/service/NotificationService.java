@@ -9,10 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class NotificationService {
@@ -111,6 +108,26 @@ public class NotificationService {
             return rejectHistory;
         }
         return new ArrayList<>();
+    }
+
+    public Map<String, List<Notification>> allNotifications(Long userId){
+        Optional<List<Notification>> allNotificationsList = notificationRepository.findAllByCurrentUserId(userId);
+        Map<String, List<Notification>> result = new HashMap<>();
+        if(allNotificationsList.isPresent()) {
+            List<Notification> notifications = allNotificationsList.get();
+            result.put("PENDING", new ArrayList<>());
+            result.put("ACCEPTED", new ArrayList<>());
+            result.put("REJECTED", new ArrayList<>());
+
+            for (Notification N : notifications) {
+                switch (N.getStatus()) {
+                    case PENDING -> result.get("PENDING").add(N);
+                    case ACCEPTED -> result.get("ACCEPTED").add(N);
+                    case REJECTED -> result.get("REJECTED").add(N);
+                }
+            }
+        }
+        return result;
     }
 }
 

@@ -30,5 +30,7 @@ public class EndpointsConstants {
     public static final String ACCEPT_HISTORY_ENDPOINT = "/acceptRequestHistory";
 
     public static final String REJECT_HISTORY_ENDPOINT = "/rejectRequestHistory";
+
+    public  static final String ALL_NOTIFICATIONS="/getAllNotifications";
     //public static final String _ENDPOINT =;
 }

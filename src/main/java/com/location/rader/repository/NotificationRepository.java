@@ -18,4 +18,6 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     Optional<Notification> findByCurrentUserIdAndTargetUserIdAndStatus(Long currentUserId, Long targetUserId, NotificationRequestStatus status);
 
     Optional<List<Notification>> findAllByCurrentUserIdAndStatus(Long currentUserId, NotificationRequestStatus status);
+
+    Optional<List<Notification>> findAllByCurrentUserId(Long userId);
 }

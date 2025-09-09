@@ -1,6 +1,7 @@
 package com.location.rader.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import com.location.rader.model.Notification;
 import com.location.rader.service.NotificationService;
@@ -174,4 +175,10 @@ public class LocationRaderController {
 		List<Notification> rejectHistory = notificationService.rejectHistory(currentUserId);
 		return ResponseEntity.ok(rejectHistory);
 	}
+
+	@GetMapping(EndpointsConstants.ALL_NOTIFICATIONS)
+	public Map<String, List<Notification>>  getAllNotifications(@RequestParam("userId") Long userId){
+		return notificationService.allNotifications(userId);
+	}
+
 }
