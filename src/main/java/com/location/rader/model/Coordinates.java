@@ -1,7 +1,6 @@
 package com.location.rader.model;
 
 import java.time.Instant;
-import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

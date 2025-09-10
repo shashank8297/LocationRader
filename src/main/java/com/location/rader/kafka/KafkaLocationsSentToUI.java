@@ -3,6 +3,8 @@ package com.location.rader.kafka;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -15,6 +17,8 @@ import com.location.rader.repository.UserRepositoty;
 
 @Service
 public class KafkaLocationsSentToUI {
+
+	private static final Logger log = LoggerFactory.getLogger(KafkaLocationsSentToUI.class);
 
 	@Autowired
 	private UserRepositoty userRepositoty;
@@ -31,16 +35,15 @@ public class KafkaLocationsSentToUI {
 
 			Optional<User> sendingUser = userRepositoty.findById(sendingUserId);
 			if (sendingUser.isPresent()) {
-				List<Long> reciversUserIds = sendingUser.get().getSharedUsers();
-				for (Long reciversUserId : reciversUserIds) {
-					String destination = "/topic/coordinates/" + reciversUserId;
+				List<Long> receiversUserIds = sendingUser.get().getSharedUsers();
+				for (Long receiverUserId : receiversUserIds) {
+					String destination = "/topic/coordinates/" + receiverUserId;
 					messagingTemplate.convertAndSend(destination, message);
 				}
 			}
 
 		} catch (Exception e) {
-			System.err.println("Error processing message: " + message);
-		    e.printStackTrace();
+			log.error("Error processing Kafka message: {}", message, e);
 		}
 	}
 }

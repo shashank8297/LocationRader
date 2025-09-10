@@ -37,49 +37,50 @@ public class NotificationService {
     }
 
     public List<Notification> pendingNotifications(Long userId){
-         List<Notification> pendingList =  notificationRepository.findByTargetUserIdAndStatus(userId, NotificationRequestStatus.PENDING);
-         return pendingList;
+        return notificationRepository.findByTargetUserIdAndStatus(userId, NotificationRequestStatus.PENDING);
     }
 
-    public void accepctNotifications(UUID requestID){
-        Optional<Notification> notification = notificationRepository.findById(requestID);
+    public void accepctNotifications(UUID requestId) {
+        Notification notification = notificationRepository.findById(requestId)
+                .orElseThrow(() -> new EntityNotFoundException("Notification not found with ID: " + requestId));
 
-        if(notification.isPresent()){
-            Notification requestedNotification = notification.get();
-            Optional<User> userWhoGotTheNotification = userRepositoty.findById(requestedNotification.getTargetUserId()); //We are in User who got the request
-            if(userWhoGotTheNotification.isPresent()){
-                User targetUser = userWhoGotTheNotification.get();
-                if(targetUser.getSharedUsers() == null && targetUser.getSharedUsers().isEmpty()){
-                    List<Long> sharedList = new ArrayList<>();
-                    sharedList.add(requestedNotification.getCurrentUserId()); //userId who send the request.
-                    targetUser.setSharedUsers(sharedList);
-                }else {
-                    List<Long> sharedUserIDs = targetUser.getSharedUsers();
-                    sharedUserIDs.add(requestedNotification.getCurrentUserId());
-                    targetUser.setSharedUsers(sharedUserIDs);
-                }
-                userRepositoty.save(targetUser);
-            }
-            Optional<User> userWhoSendTheNotofication = userRepositoty.findById(requestedNotification.getCurrentUserId());
-            if(userWhoSendTheNotofication.isPresent()){
-                User currentUser = userWhoSendTheNotofication.get();
-                if(currentUser.getAccessibleUsers() == null && currentUser.getAccessibleUsers().isEmpty()){
-                    List<Long> accessList = new ArrayList<>();
-                    accessList.add(requestedNotification.getTargetUserId());
-                    currentUser.setAccessibleUsers(accessList);
-                }else {
-                    List<Long> accessUserIDs = currentUser.getAccessibleUsers();
-                    accessUserIDs.add(requestedNotification.getTargetUserId());
-                    currentUser.setAccessibleUsers(accessUserIDs);
-                }
-                userRepositoty.save(currentUser);
-            }
-            requestedNotification.setStatus(NotificationRequestStatus.ACCEPTED);
-            notificationRepository.save(requestedNotification);
-        }else {
-            throw new EntityNotFoundException("Notification not found with ID: " + requestID);
+        updateSharedUsers(notification.getTargetUserId(), notification.getCurrentUserId());
+        updateAccessibleUsers(notification.getCurrentUserId(), notification.getTargetUserId());
+
+        notification.setStatus(NotificationRequestStatus.ACCEPTED);
+        notificationRepository.save(notification);
+    }
+
+    private void updateSharedUsers(Long targetUserId, Long currentUserId) {
+        User targetUser = userRepositoty.findById(targetUserId).orElseThrow(
+                () -> new EntityNotFoundException("User not found with ID: " + targetUserId)
+        );
+
+        List<Long> sharedUsers = targetUser.getSharedUsers();
+        if (sharedUsers == null) sharedUsers = new ArrayList<>();
+
+        if (!sharedUsers.contains(currentUserId)) {
+            sharedUsers.add(currentUserId);
+            targetUser.setSharedUsers(sharedUsers);
+            userRepositoty.save(targetUser);
         }
     }
+
+    private void updateAccessibleUsers(Long currentUserId, Long targetUserId) {
+        User currentUser = userRepositoty.findById(currentUserId).orElseThrow(
+                () -> new EntityNotFoundException("User not found with ID: " + currentUserId)
+        );
+
+        List<Long> accessibleUsers = currentUser.getAccessibleUsers();
+        if (accessibleUsers == null) accessibleUsers = new ArrayList<>();
+
+        if (!accessibleUsers.contains(targetUserId)) {
+            accessibleUsers.add(targetUserId);
+            currentUser.setAccessibleUsers(accessibleUsers);
+            userRepositoty.save(currentUser);
+        }
+    }
+
 
     public void rejectNotifications(UUID requestID){
         Optional<Notification> notification = notificationRepository.findById(requestID);
@@ -94,20 +95,12 @@ public class NotificationService {
 
     public List<Notification> acceptHistory(Long currentUserId) {
         Optional<List<Notification>> optionalAcceptHistory = notificationRepository.findAllByCurrentUserIdAndStatus(currentUserId, NotificationRequestStatus.ACCEPTED);
-        if(optionalAcceptHistory.isPresent()){
-            List<Notification> acceptHistory = optionalAcceptHistory.get();
-            return acceptHistory;
-        }
-        return new ArrayList<>();
+        return optionalAcceptHistory.orElseGet(ArrayList::new);
     }
 
     public List<Notification> rejectHistory(Long currentUserId) {
         Optional<List<Notification>> optionalRejectHistory = notificationRepository.findAllByCurrentUserIdAndStatus(currentUserId, NotificationRequestStatus.REJECTED);
-        if(optionalRejectHistory.isPresent()){
-            List<Notification> rejectHistory = optionalRejectHistory.get();
-            return rejectHistory;
-        }
-        return new ArrayList<>();
+        return optionalRejectHistory.orElseGet(ArrayList::new);
     }
 
     public Map<String, List<Notification>> allNotifications(Long userId){

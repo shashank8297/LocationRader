@@ -1,6 +1,11 @@
 package com.location.rader.utils;
 
-public class EndpointsConstants {
+public final class EndpointsConstants {
+
+    private EndpointsConstants() {
+        // Prevent instantiation
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
     public static final String NEW_USER_REGISTER_ENDPOINT = "/register";
 
     public static final String LOGIN_ENDPOINT = "/login";

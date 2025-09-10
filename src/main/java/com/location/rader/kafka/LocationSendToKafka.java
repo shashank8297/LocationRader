@@ -18,13 +18,10 @@ public class LocationSendToKafka {
 	@Autowired
 	private ObjectMapper objectMapper;
 
-	@Autowired
-	private LocationRaderConstants locationRaderConstants;
-
 	public void sendLocationUpdate(Coordinates coordinates) {
 		try {
 			String jsonMessage = objectMapper.writeValueAsString(coordinates);
-			kafkaTemplate.send(locationRaderConstants.KAFKA_TOPIC_LOCATION_UPDATES, jsonMessage);
+			kafkaTemplate.send(LocationRaderConstants.KAFKA_TOPIC_LOCATION_UPDATES, jsonMessage);
 		} catch (JsonProcessingException e) {
 			e.printStackTrace(); // Use proper logging in production
 		}

@@ -1,12 +1,10 @@
 package com.location.rader.service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import com.location.rader.model.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +28,7 @@ public class LocationRaderService {
 
 	@Autowired
 	private LocationSendToKafka locationSendToKafka;
-	
+
 	@Autowired
 	private KafkaLocationsSentToUI kafkaLocationsSentToUI2;
 
@@ -57,25 +55,23 @@ public class LocationRaderService {
 	public List<Coordinates> getLocationHistory(Long userId) {
 		Optional<User> isExist = userRepositoty.findById(userId);
 		if (isExist.isPresent()) {
-			List<Coordinates> hiatory = locationRaderRepository.findByUserIdOrderByTimestampDesc(userId);
-			return hiatory;
+			return locationRaderRepository.findByUserIdOrderByTimestampDesc(userId);
 		} else {
-			return null;
+			return Collections.emptyList();
 		}
 	}
 
-	public void sendCoordinatesToUser(Long userId) {
+	/*public void sendCoordinatesToUser(Long userId) {
 		Optional<User> isExist = userRepositoty.findById(userId);
 		List<Long> canAccess = isExist.get().getAccessibleUsers();
 		
 		//kafkaLocationsSentToUI.consumeLocationUpdate(canAccess);
-	}
+	}*/
 
 	public List<Long> listOfUserHaveAccess(Long userId){
 		Optional<User> listOfUsers = userRepositoty.findById(userId);
 		if(listOfUsers.isPresent()){
-			List<Long> userIds = listOfUsers.get().getAccessibleUsers();
-			return userIds;
+			return listOfUsers.get().getAccessibleUsers();
 		}
 		return Collections.emptyList();
 	}

@@ -50,7 +50,7 @@ public class UserService {
 		}
 	}
 
-	public Boolean validatingCredentials(User user){
+	public boolean validatingCredentials(User user){
 		Optional<User> userDetails = userRepositoty.findById(user.getUserId());
 		if(userDetails.isPresent()){
 			String storedPassword = userDetails.get().getPassword();
@@ -63,32 +63,31 @@ public class UserService {
 	}
 
 	public User saveWhichUserCanAccesOtherUsersLocations(User user) {
-		Optional<User> userDeatails = userRepositoty.findById(user.getUserId());
+		User currentUser = userRepositoty.findById(user.getUserId())
+				.orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + user.getUserId()));
 
-		List<Long> accessList = new ArrayList<>();
-		for (int i = 0; i < user.getAccessibleUsers().size(); i++) {
-			accessList.add(user.getAccessibleUsers().get(i));
-		}
-		userDeatails.get().setAccessibleUsers(accessList);
-		User saved = userRepositoty.save(userDeatails.get());
+		// Copy accessible users from request
+		List<Long> accessList = new ArrayList<>(user.getAccessibleUsers());
+		currentUser.setAccessibleUsers(accessList);
+		User savedUser = userRepositoty.save(currentUser);
 
-		for (int j = 0; j < saved.getAccessibleUsers().size(); j++) {
-			Optional<User> userDetailsOfAccessList = userRepositoty.findById(saved.getAccessibleUsers().get(j));
-			if (userDetailsOfAccessList.isPresent()) {
-				List<Long> getsAccessList = userDetailsOfAccessList.get().getSharedUsers();
-				if (getsAccessList == null) {
-					getsAccessList = new ArrayList<>();
+		// Update shared users for each user in the access list
+		for (Long accessibleUserId : savedUser.getAccessibleUsers()) {
+			userRepositoty.findById(accessibleUserId).ifPresent(accessUser -> {
+				List<Long> sharedUsers = accessUser.getSharedUsers();
+				if (sharedUsers == null) sharedUsers = new ArrayList<>();
+
+				if (!sharedUsers.contains(savedUser.getUserId())) {
+					sharedUsers.add(savedUser.getUserId());
+					accessUser.setSharedUsers(sharedUsers);
+					userRepositoty.save(accessUser);
 				}
-				// Avoid duplicates
-				if (!getsAccessList.contains(saved.getUserId())) {
-					getsAccessList.add(saved.getUserId());
-					userDetailsOfAccessList.get().setSharedUsers(getsAccessList);
-					userRepositoty.save(userDetailsOfAccessList.get());
-				}
-			}
+			});
 		}
-		return saved;
+
+		return savedUser;
 	}
+
 
 	public List<User> usersList(){
 		List<User> users = userRepositoty.findAll();
