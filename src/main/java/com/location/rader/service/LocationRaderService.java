@@ -36,7 +36,7 @@ public class LocationRaderService {
         this.kafkaLocationsSentToUI = kafkaLocationsSentToUI;
     }
 
-	public Coordinates getLocation(Coordinates coordinates) {
+	public Coordinates saveLocation(Coordinates coordinates) {
 
 		// Always create and save a new coordinate for history tracking
 		Coordinates newCoordinate = new Coordinates();

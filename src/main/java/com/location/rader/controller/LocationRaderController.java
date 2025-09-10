@@ -43,23 +43,21 @@ public class LocationRaderController {
 	/*public ResponseEntity<String> responseEntity;*/
 
 	@PostMapping(EndpointsConstants.NEW_USER_REGISTER_ENDPOINT)
-	public ResponseEntity<String> registerNewUser(@RequestBody User user) throws JsonProcessingException {
+	public ResponseEntity<User> registerNewUser(@RequestBody User user) {
 		User createdUser = userService.createNewUser(user);
 		if (createdUser == null) {
-			return ResponseEntity.status(409).body("User already exists... \ntry with another userId.");
+			return ResponseEntity.status(409).build(); // or return a custom error DTO
 		}
-		return ResponseEntity.ok("new user is added...\n"
-				+ objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(createdUser));
+		return ResponseEntity.ok(createdUser);
 	}
+
 
 	@PostMapping(EndpointsConstants.LOGIN_ENDPOINT)
 	public ResponseEntity<String> userLogin(@RequestBody User user) {
 		boolean validate = userService.validatingCredentials(user);
-
 		if (validate) {
 			return ResponseEntity.ok("Login successful for userId: " + user.getUserId());
 		}
-
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 				.body("Invalid credentials. Please check userId or password.");
 	}
@@ -67,13 +65,16 @@ public class LocationRaderController {
 
 	@GetMapping(EndpointsConstants.USER_DETAILS_ENDPOINT)
 	public ResponseEntity<User> userDetails(@RequestParam("userId") Long userId){
-		User user =userService.userDetails(userId);
+		User user = userService.userDetails(userId);
+		if(user == null){
+			return ResponseEntity.notFound().build();
+		}
 		return ResponseEntity.ok(user);
 	}
 
 	@PostMapping(EndpointsConstants.LOCATION_UPDATE_ENDPOINT)
 	public ResponseEntity<String> location(@RequestBody Coordinates coordinates) {
-		locationRaderService.getLocation(coordinates);
+		locationRaderService.saveLocation(coordinates);
 		return ResponseEntity.ok("Location saved to history.");
 	}
 
@@ -88,11 +89,13 @@ public class LocationRaderController {
 
 
 	@PostMapping(EndpointsConstants.REQUEST_FOR_LOCATION_ACCESS_ENDPOINT)
-	public ResponseEntity<String> accessLocationOfOtherUsers(@RequestBody User user) throws JsonProcessingException {
-		User listOfUserCanAccessOtherUsers = userService.saveWhichUserCanAccesOtherUsersLocations(user);
-		return ResponseEntity.ok("Access Granted for User: " + user.getUserId() + "following users "
-				+ objectMapper.writerWithDefaultPrettyPrinter()
-						.writeValueAsString(listOfUserCanAccessOtherUsers.getAccessibleUsers()));
+	public ResponseEntity<User> accessLocationOfOtherUsers(@RequestBody User user) throws JsonProcessingException {
+		User updatedUser = userService.saveWhichUserCanAccesOtherUsersLocations(user);
+		if (updatedUser != null) {
+			return ResponseEntity.ok(updatedUser);
+		} else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+		}
 	}
 
 	/*@GetMapping(EndpointsConstants.COORDINATES_OF_OTHER_USER_ENDPOINT)
