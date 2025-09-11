@@ -114,13 +114,15 @@ public class NotificationService {
 
             for (Notification N : notifications) {
                 switch (N.getStatus()) {
-                    case PENDING -> result.get("PENDING").add(N);
-                    case ACCEPTED -> result.get("ACCEPTED").add(N);
-                    case REJECTED -> result.get("REJECTED").add(N);
+                    case PENDING : result.get("PENDING").add(N);
+                    case ACCEPTED : result.get("ACCEPTED").add(N);
+                    case REJECTED : result.get("REJECTED").add(N);
+                    //case PENDING -> result.get("PENDING").add(N);
+                   // case ACCEPTED -> result.get("ACCEPTED").add(N);
+                    //case REJECTED -> result.get("REJECTED").add(N);
                 }
             }
         }
         return result;
     }
 }
-
